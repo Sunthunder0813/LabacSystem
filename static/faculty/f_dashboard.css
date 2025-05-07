@@ -1,0 +1,135 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body, html {
+    height: 100%;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #d3d3d3;
+}
+
+.wrapper {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+header {
+    background: linear-gradient(to right, #145214, #1e7b1e);
+    color: white;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 20px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+}
+
+h1 {
+    font-size: 22px;
+}
+
+nav {
+    display: flex;
+    align-items: center;
+    height: 100%;
+}
+
+nav a {
+    color: white;
+    text-decoration: none;
+    padding: 0 14px;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    transition: background-color 0.3s;
+    border-radius: 4px;
+}
+
+nav a:hover {
+    background-color: rgba(255, 255, 255, 0.15);
+}
+
+.dropdown {
+    position: relative;
+    height: 100%;
+}
+
+.dropdown > a {
+    cursor: pointer;
+    height: 100%;
+    display: flex;
+    align-items: center;
+}
+
+.dropdown-content {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    background-color: #2e4d2e;
+    border-radius: 6px;
+    min-width: 160px;
+    z-index: 1000;
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+}
+
+.dropdown:hover .dropdown-content {
+    display: block;
+}
+
+.dropdown-content a {
+    display: block;
+    padding: 10px 14px;
+    text-decoration: none;
+    color: #fff;
+    transition: background-color 0.3s;
+}
+
+.dropdown-content a:hover {
+    background-color: #3d693d;
+}
+
+main {
+    flex: 1;
+    max-width: 800px;
+    margin: 30px auto;
+    padding: 30px;
+    border-radius: 10px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    backdrop-filter: blur(4px);
+}
+
+.welcome-message {
+    font-size: 20px;
+    font-weight: 500;
+    margin-bottom: 20px;
+}
+
+footer {
+    text-align: center;
+    padding: 14px;
+    background: linear-gradient(to right, #145214, #1e7b1e);
+    color: white;
+    width: 100%;
+    margin-top: auto;
+}
+
+@media (max-width: 768px) {
+    nav {
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+
+    nav a {
+        padding: 10px;
+        margin: 4px 2px;
+    }
+
+    .dropdown-content {
+        position: static;
+        box-shadow: none;
+    }
+}
