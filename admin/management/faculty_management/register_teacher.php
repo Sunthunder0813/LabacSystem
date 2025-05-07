@@ -19,7 +19,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $contact_number = $_POST['contact_number'];
     $email = $_POST['email'];
     $address = $_POST['address'];
-    $joining_date = $_POST['joining_date'];
+    $joining_date = date('Y-m-d'); // Automatically set to today's date
     $qualifications = $_POST['qualifications'];
     $experience = $_POST['experience'];
     $previous_schools = $_POST['previous_schools'];
@@ -41,8 +41,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
             $stmt->close();
 
+            // Check if user already exists in users table
+            $stmt = $conn->prepare("SELECT id FROM users WHERE email = ?");
+            if (!$stmt) {
+                throw new Exception("Prepare failed: " . $conn->error);
+            }
+            $stmt->bind_param("s", $email);
+            $stmt->execute();
+            $stmt->store_result();
+            if ($stmt->num_rows > 0) {
+                $stmt->close();
+                throw new Exception("A user with this email already exists.");
+            }
+            $stmt->close();
+
             // Insert into users table
-            $username = "$first_name $last_name"; // Assuming username is a combination of first and last name
+            $username = $email; // Use email as username for uniqueness
             $default_password = password_hash('labac2025', PASSWORD_DEFAULT); // Default password
             $user_type_id = 2; // Assuming 'faculty' user type has ID 2
             $stmt = $conn->prepare("INSERT INTO users (username, email, password, user_type_id) VALUES (?, ?, ?, ?)");
@@ -59,11 +73,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             header('Location: faculty.php?success=1');
             exit();
         } catch (mysqli_sql_exception $e) {
-            if (strpos($e->getMessage(), "Duplicate entry") !== false && strpos($e->getMessage(), "email") !== false) {
-                $error_message = "A teacher or user with this email already exists.";
-            } else {
-                $error_message = "An error occurred during registration. Please try again.";
-            }
+            $error_message = "SQL error: " . htmlspecialchars($e->getMessage());
         } catch (Exception $e) {
             $error_message = "System error: " . htmlspecialchars($e->getMessage());
         }
@@ -267,61 +277,95 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         .container {
-            width: 1000px;
-            max-width: 1200px;
+            width: 1300px;
+            max-width: 98vw;
             margin: 50px auto;
-            background: white;
-            padding: 30px;
-            border-radius: 10px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            background: #f8fafc;
+            padding: 40px 50px 30px 50px;
+            border-radius: 18px;
+            box-shadow: 0 8px 32px rgba(30,58,95,0.13);
+            border: 1.5px solid #e0e6ed;
         }
-
         form {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 0;
         }
-
-        form .full-width {
-            grid-column: span 2;
+        .form-row {
+            display: flex;
+            gap: 24px;
+            margin-bottom: 18px;
         }
-
-        input, select, textarea {
-            width: 100%;
-            padding: 12px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-            font-size: 14px;
+        .form-group {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            margin-bottom: 0;
+            gap: 8px; /* Ensure consistent gap between label and input */
+        }
+        form label {
+            font-weight: 600;
+            color: #1e3a5f;
+            margin-bottom: 0; /* Remove margin, use gap instead */
+            letter-spacing: 0.01em;
+            font-size: 15px;
+        }
+        form input, form select {
+            padding: 12px 14px;
+            border: 1.5px solid #cfd8dc;
+            border-radius: 7px;
+            font-size: 15px;
+            background: #fafdff;
             transition: border-color 0.3s, box-shadow 0.3s;
+            margin-bottom: 0;
         }
-
-        input:focus, select:focus, textarea:focus {
+        form input:focus, form select:focus {
             border-color: #1e3a5f;
-            box-shadow: 0 0 5px rgba(30, 58, 95, 0.5);
+            box-shadow: 0 0 7px rgba(30, 58, 95, 0.13);
             outline: none;
+            background: #f0f6fa;
         }
-
-        textarea {
-            resize: none;
+        form textarea {
+            resize: vertical;
+            min-height: 60px;
         }
-
-        button {
-            grid-column: span 2;
-            padding: 12px;
-            background-color: #1e3a5f;
-            color: white;
+        .form-group input[type="text"],
+        .form-group input[type="number"],
+        .form-group input[type="email"],
+        .form-group input[type="date"],
+        .form-group select {
+            width: 100%;
+        }
+        .form-group input.address-input {
+            min-height: 60px;
+            height: 60px;
+        }
+        form button {
+            margin-top: 18px;
+            padding: 9px 0;
+            background: linear-gradient(90deg, #1e3a5f 60%, #274472 100%);
+            color: #fff;
             border: none;
-            border-radius: 5px;
+            border-radius: 7px;
             font-size: 16px;
+            font-weight: 600;
             cursor: pointer;
-            transition: background-color 0.3s, transform 0.2s;
+            box-shadow: 0 2px 8px rgba(30,58,95,0.07);
+            transition: background 0.3s, transform 0.2s;
+            width: 160px;
+            align-self: flex-end;
         }
-
-        button:hover {
-            background-color: #34495e;
-            transform: translateY(-2px);
+        form button:hover {
+            background: linear-gradient(90deg, #274472 60%, #1e3a5f 100%);
+            transform: translateY(-2px) scale(1.03);
         }
-
+        @media (max-width: 900px) {
+            .form-row {
+                flex-direction: column;
+                gap: 0;
+            }
+        }
+        
         .message {
             grid-column: span 2;
             text-align: center;
@@ -472,26 +516,70 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <main>
             
             <div class="container">
-                <h1>Register Teacher</h1>
-                <hr>
+                <h1 style="text-align:center;font-size:2rem;font-weight:700;color:#1e3a5f;margin-bottom:10px;letter-spacing:0.02em;">Register Teacher</h1>
+                <hr style="margin-bottom: 28px;">
                 <form method="POST" action="">
-                    <input type="text" name="last_name" placeholder="Last Name" required>
-                    <input type="text" name="first_name" placeholder="First Name" required>
-                    <input type="text" name="middle_name" placeholder="Middle Name">
-                    <input type="number" name="age" placeholder="Age" required>
-                    <input type="date" name="dob" placeholder="Date of Birth" required>
-                    <select name="gender" required>
-                        <option value="">Select Gender</option>
-                        <option value="Male">Male</option>
-                        <option value="Female">Female</option>
-                    </select>
-                    <input type="text" name="contact_number" placeholder="Contact Number" required>
-                    <input type="email" name="email" placeholder="Email" required>
-                    <textarea name="address" placeholder="Address" rows="3" class="full-width" required></textarea>
-                    <input type="date" name="joining_date" placeholder="Joining Date" required>
-                    <textarea name="qualifications" placeholder="Qualifications" rows="3"></textarea>
-                    <textarea name="experience" placeholder="Experience" rows="3"></textarea>
-                    <textarea name="previous_schools" placeholder="Previous Schools" rows="3"></textarea>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="last_name">Last Name</label>
+                            <input type="text" id="last_name" name="last_name" placeholder="Last Name" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="first_name">First Name</label>
+                            <input type="text" id="first_name" name="first_name" placeholder="First Name" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="middle_name">Middle Name</label>
+                            <input type="text" id="middle_name" name="middle_name" placeholder="Middle Name">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="age">Age</label>
+                            <input type="number" id="age" name="age" placeholder="Age" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="gender">Gender</label>
+                            <select id="gender" name="gender" required>
+                                <option value="">Select Gender</option>
+                                <option value="Male">Male</option>
+                                <option value="Female">Female</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="dob">Date of Birth</label>
+                            <input type="date" id="dob" name="dob" placeholder="Date of Birth" required>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="contact_number">Contact Number</label>
+                            <input type="text" id="contact_number" name="contact_number" placeholder="Contact Number" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="email">Email</label>
+                            <input type="email" id="email" name="email" placeholder="Email" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="address">Address</label>
+                        <input type="text" id="address" name="address" class="address-input" placeholder="Address" required>
+                    </div>
+                    <div style="height: 18px;"></div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="qualifications">Qualifications</label>
+                            <input id="qualifications" name="qualifications" placeholder="Qualifications"></input>
+                        </div>
+                        <div class="form-group">
+                            <label for="experience">Experience</label>
+                            <input id="experience" name="experience" placeholder="Experience"></input>
+                        </div>
+                        <div class="form-group">
+                            <label for="previous_schools">Previous Schools</label>
+                            <input id="previous_schools" name="previous_schools" placeholder="Previous Schools"></input>
+                        </div>
+                    </div>
                     <button type="submit">Register</button>
                 </form>
             </div>
